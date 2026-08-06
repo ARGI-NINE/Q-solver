@@ -13,6 +13,8 @@ export namespace config {
 	    grayscale?: boolean;
 	    keepContext?: boolean;
 	    interruptThinking?: boolean;
+	    reasoningEffort?: string;
+	    priorityProcessing: boolean;
 	    screenshotMode?: string;
 	    resumePath?: string;
 	    resumeContent?: string;
@@ -40,6 +42,8 @@ export namespace config {
 	        this.grayscale = source["grayscale"];
 	        this.keepContext = source["keepContext"];
 	        this.interruptThinking = source["interruptThinking"];
+	        this.reasoningEffort = source["reasoningEffort"];
+	        this.priorityProcessing = source["priorityProcessing"];
 	        this.screenshotMode = source["screenshotMode"];
 	        this.resumePath = source["resumePath"];
 	        this.resumeContent = source["resumeContent"];
@@ -167,4 +171,3 @@ export namespace shortcut {
 	}
 
 }
-

@@ -8,6 +8,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 )
 
 // MaxConversationRounds is the maximum number of conversation rounds to keep.
@@ -53,7 +55,10 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 	logger.Println("开始解题流程")
 
 	var systemPrompt bytes.Buffer
-	systemPrompt.WriteString(domain.GetSystemBehaviorPrompt())
+	strictLeetCode := req.Config.DomainId == "dev-leetcode-cpp"
+	if !strictLeetCode {
+		systemPrompt.WriteString(domain.GetSystemBehaviorPrompt())
+	}
 
 	if req.Config.DomainId != "" {
 		if prompt := domain.GetPrompt(req.Config.DomainId); prompt != "" {
@@ -122,6 +127,18 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 	logger.Printf("[解题] 模型返回内容: %s", response.Content)
 	logger.Printf("[解题] 模型返回思考链长度: %d", len(response.Thinking))
 
+	if strictLeetCode {
+		cleaned, cleanErr := extractLeetCodeSolution(response.Content)
+		if cleanErr != nil {
+			logger.Printf("[解题] LeetCode 输出格式错误: %v", cleanErr)
+			if cb.EmitEvent != nil {
+				cb.EmitEvent("solution-error", cleanErr.Error())
+			}
+			return false
+		}
+		response.Content = cleaned
+	}
+
 	if response.Content == "" && response.Thinking == "" {
 		logger.Println("[解题] 警告: 模型返回内容为空")
 		if cb.EmitEvent != nil {
@@ -136,6 +153,47 @@ func (s *Solver) Solve(ctx context.Context, req Request, cb Callbacks) bool {
 
 	s.chatHistory = []llm.Message{}
 	return true
+}
+
+func extractLeetCodeSolution(content string) (string, error) {
+	content = strings.TrimSpace(content)
+	start := strings.Index(content, "class Solution")
+	if start < 0 {
+		return "", fmt.Errorf("模型未返回 LeetCode class Solution，请重试")
+	}
+
+	code := content[start:]
+	open := strings.IndexByte(code, '{')
+	if open < 0 {
+		return "", fmt.Errorf("模型返回的 class Solution 不完整，请重试")
+	}
+
+	depth := 0
+	end := -1
+	for i := open; i < len(code); i++ {
+		switch code[i] {
+		case '{':
+			depth++
+		case '}':
+			depth--
+			if depth == 0 {
+				end = i + 1
+				if end < len(code) && code[end] == ';' {
+					end++
+				}
+				i = len(code)
+			}
+		}
+	}
+	if end < 0 {
+		return "", fmt.Errorf("模型返回的 class Solution 括号不完整，请重试")
+	}
+
+	code = strings.TrimSpace(code[:end])
+	if strings.Contains(code, "int main(") || strings.Contains(code, "int main (") {
+		return "", fmt.Errorf("模型返回了 ACM main 程序，请重试")
+	}
+	return code, nil
 }
 
 // ensureSystemPrompt keeps the first history message aligned with the active system prompt.

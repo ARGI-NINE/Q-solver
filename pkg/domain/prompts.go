@@ -37,6 +37,7 @@ func GetCategories() []Category {
 			ID:    "dev-exam",
 			Label: "编程笔试",
 			Items: []DomainItem{
+				{ID: "dev-leetcode-cpp", Label: "LeetCode C++ 秒杀", Icon: "🚀", Description: "只输出可提交的 class Solution 核心代码"},
 				{ID: "dev-java-exam", Label: "Java 笔试", Icon: "☕", Description: "解答 JVM, 并发, Spring 考题"},
 				{ID: "dev-python-exam", Label: "Python 笔试", Icon: "🐍", Description: "解答算法, 数据结构, 语法题"},
 				{ID: "dev-golang-exam", Label: "Go 语言笔试", Icon: "🐹", Description: "解答 GMP, GC,由于, 架构题"},
@@ -175,6 +176,16 @@ func GetSystemBehaviorPrompt() string {
 
 // promptMap 存储所有具体的提示词
 var promptMap = map[string]string{
+	"dev-leetcode-cpp": `<PersonaCard>
+  <Role>LeetCode C++ Solution Generator</Role>
+  <Task>截图中的题目很大概率来自 LeetCode Hot 100。识别题目并给出可直接提交的 C++ 核心代码。</Task>
+  <OutputRules>
+    - 只输出 class Solution 及题目要求的方法。
+    - 不要输出 Markdown 代码围栏、解释、注释、include、using namespace std、main、cin 或 cout。
+    - 不要重复定义 LeetCode 已提供的 ListNode、TreeNode、Node 等类型。
+    - 使用截图要求的函数签名；代码必须完整、可编译并处理边界条件。
+  </OutputRules>
+</PersonaCard>`,
 	// ==================== General Modes ====================
 	"gen-solver": `<PersonaCard>
   <Role>General Problem Solver</Role>

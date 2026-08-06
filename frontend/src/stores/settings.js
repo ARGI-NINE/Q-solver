@@ -23,6 +23,8 @@ export const useSettingsStore = defineStore('settings', () => {
     sharpening: 0,
     grayscale: true,
     noCompression: false,
+		reasoningEffort: 'low',
+		priorityProcessing: true,
   })
 
   const tempSettings = reactive({ ...settings })
@@ -179,6 +181,8 @@ export const useSettingsStore = defineStore('settings', () => {
     settings.resumePath = config.resumePath || ''
     settings.resumeContent = config.resumeContent || ''
     settings.screenshotMode = config.screenshotMode || 'window'
+		settings.reasoningEffort = config.reasoningEffort ?? 'low'
+		settings.priorityProcessing = config.priorityProcessing !== undefined ? config.priorityProcessing : true
 
     const opacity = config.opacity !== undefined ? config.opacity : 1.0
     settings.transparency = 1.0 - opacity
@@ -269,6 +273,8 @@ export const useSettingsStore = defineStore('settings', () => {
       sharpening: sourceSettings.sharpening,
       grayscale: sourceSettings.grayscale,
       noCompression: sourceSettings.noCompression,
+		reasoningEffort: sourceSettings.reasoningEffort,
+		priorityProcessing: sourceSettings.priorityProcessing,
       resumePath: sourceSettings.resumePath,
       resumeContent: sourceSettings.resumeContent,
       shortcuts: sourceShortcuts,

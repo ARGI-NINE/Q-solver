@@ -19,6 +19,8 @@ type Config struct {
 	Grayscale          bool                           `json:"grayscale,omitempty"`
 	KeepContext        bool                           `json:"keepContext,omitempty"`
 	InterruptThinking  bool                           `json:"interruptThinking,omitempty"`
+	ReasoningEffort    string                         `json:"reasoningEffort,omitempty"`
+	PriorityProcessing bool                           `json:"priorityProcessing"`
 	ScreenshotMode     string                         `json:"screenshotMode,omitempty"`
 	ResumePath         string                         `json:"resumePath,omitempty"`
 	ResumeContent      string                         `json:"resumeContent,omitempty"`
@@ -48,6 +50,8 @@ func NewDefaultConfig() Config {
 		Opacity:            1.0,
 		KeepContext:        false,
 		InterruptThinking:  false,
+		ReasoningEffort:    "low",
+		PriorityProcessing: true,
 		ScreenshotMode:     "fullscreen", // 默认全屏截图，确保捕获完整内容
 		NoCompression:      false,        // 保持压缩以减小文件大小
 		CompressionQuality: 92,           // 高质量压缩，确保 AI 清晰识别文字
@@ -109,6 +113,10 @@ func (c *Config) ToJSON() string {
 }
 
 func (c *Config) Validate() error {
+	validReasoning := map[string]bool{"": true, "none": true, "low": true, "medium": true, "high": true}
+	if !validReasoning[c.ReasoningEffort] {
+		return &ValidationError{Field: "reasoningEffort", Message: "推理强度必须是 none、low、medium、high 或留空"}
+	}
 	if c.ScreenshotMode != "" && c.ScreenshotMode != "fullscreen" && c.ScreenshotMode != "window" {
 		return &ValidationError{Field: "screenshotMode", Message: "截图模式必须是 'fullscreen' 或 'window'"}
 	}

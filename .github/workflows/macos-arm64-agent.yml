@@ -1,0 +1,84 @@
+name: Build macOS arm64 agent artifact
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Apple Silicon DMG
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          check-latest: true
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Test backend
+        run: go test ./...
+
+      - name: Build Apple Silicon app
+        run: wails build -ldflags "-s -w" -tags prod -platform darwin/arm64
+
+      - name: Locate, verify, and sign app
+        id: app
+        run: |
+          APP_PATH="build/bin/Q-Solver.app"
+          if [ ! -d "$APP_PATH" ]; then
+            APP_PATH="build/bin/darwin/arm64/Q-Solver.app"
+          fi
+          test -d "$APP_PATH"
+          EXECUTABLE="$APP_PATH/Contents/MacOS/Q-Solver"
+          file "$EXECUTABLE" | tee build/bin/architecture.txt
+          file "$EXECUTABLE" | grep -q "arm64"
+          codesign --force --deep --sign - "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          echo "path=$APP_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Create DMG
+        run: |
+          STAGE="$(mktemp -d)"
+          cp -R "${{ steps.app.outputs.path }}" "$STAGE/Q-Solver.app"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create \
+            -volname "Q-Solver" \
+            -srcfolder "$STAGE" \
+            -ov \
+            -format UDZO \
+            build/bin/Q-Solver-macos-arm64.dmg
+          hdiutil verify build/bin/Q-Solver-macos-arm64.dmg
+          shasum -a 256 build/bin/Q-Solver-macos-arm64.dmg > build/bin/Q-Solver-macos-arm64.dmg.sha256
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Q-Solver-macos-arm64
+          path: |
+            build/bin/Q-Solver-macos-arm64.dmg
+            build/bin/Q-Solver-macos-arm64.dmg.sha256
+            build/bin/architecture.txt
+          if-no-files-found: error
