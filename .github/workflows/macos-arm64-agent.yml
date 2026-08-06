@@ -1,6 +1,7 @@
 name: Build macOS arm64 agent artifact
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
