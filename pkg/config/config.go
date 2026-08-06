@@ -81,14 +81,14 @@ func getDefaultShortcuts() map[string]shortcut.KeyBinding {
 			"solve":        {ComboID: "Cmd+1", KeyName: "⌘1"},
 			"send":         {ComboID: "Cmd+J", KeyName: "⌘J"},
 			"delete":       {ComboID: "Cmd+D", KeyName: "⌘D"},
-			"toggle":       {ComboID: "Cmd+2", KeyName: "⌘2"},
+			"toggle":       {ComboID: "Cmd+9", KeyName: "⌘9"},
 			"clickthrough": {ComboID: "Cmd+3", KeyName: "⌘3"},
-			"move_up":      {ComboID: "Cmd+Option+Up", KeyName: "⌘⌥↑"},
-			"move_down":    {ComboID: "Cmd+Option+Down", KeyName: "⌘⌥↓"},
-			"move_left":    {ComboID: "Cmd+Option+Left", KeyName: "⌘⌥←"},
-			"move_right":   {ComboID: "Cmd+Option+Right", KeyName: "⌘⌥→"},
-			"scroll_up":    {ComboID: "Cmd+Option+Shift+Up", KeyName: "⌘⌥⇧↑"},
-			"scroll_down":  {ComboID: "Cmd+Option+Shift+Down", KeyName: "⌘⌥⇧↓"},
+			"move_up":      {ComboID: "Cmd+Option+W", KeyName: "⌘⌥W"},
+			"move_down":    {ComboID: "Cmd+Option+S", KeyName: "⌘⌥S"},
+			"move_left":    {ComboID: "Cmd+Option+A", KeyName: "⌘⌥A"},
+			"move_right":   {ComboID: "Cmd+Option+D", KeyName: "⌘⌥D"},
+			"scroll_up":    {ComboID: "Cmd+Option+Up", KeyName: "⌘⌥↑"},
+			"scroll_down":  {ComboID: "Cmd+Option+Down", KeyName: "⌘⌥↓"},
 		}
 	}
 	// Windows 默认快捷键

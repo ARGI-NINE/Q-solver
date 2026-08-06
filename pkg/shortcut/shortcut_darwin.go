@@ -29,16 +29,16 @@ var macDefaultShortcuts = map[string]struct {
 	"screenshot":   {[]hotkey.Modifier{hotkey.ModCmd}, hotkey.Key1},
 	"send":         {[]hotkey.Modifier{hotkey.ModCmd}, hotkey.KeyJ},
 	"delete":       {[]hotkey.Modifier{hotkey.ModCmd}, hotkey.KeyD},
-	"toggle":       {[]hotkey.Modifier{hotkey.ModCmd}, hotkey.Key2},
+	"toggle":       {[]hotkey.Modifier{hotkey.ModCmd}, hotkey.Key9},
 	"clickthrough": {[]hotkey.Modifier{hotkey.ModCmd}, hotkey.Key3},
-	// 方向键快捷键使用 Command + Option + 方向键
-	"move_up":    {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyUp},
-	"move_down":  {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyDown},
-	"move_left":  {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyLeft},
-	"move_right": {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyRight},
-	// 滚动使用 Command + Option + Shift + 方向键
-	"scroll_up":   {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption, hotkey.ModShift}, hotkey.KeyUp},
-	"scroll_down": {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption, hotkey.ModShift}, hotkey.KeyDown},
+	// 面板移动使用 Command + Option + W/S/A/D
+	"move_up":    {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyW},
+	"move_down":  {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyS},
+	"move_left":  {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyA},
+	"move_right": {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyD},
+	// 翻页使用 Command + Option + 上下方向键
+	"scroll_up":   {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyUp},
+	"scroll_down": {[]hotkey.Modifier{hotkey.ModCmd, hotkey.ModOption}, hotkey.KeyDown},
 }
 
 func NewManager() *Manager {
