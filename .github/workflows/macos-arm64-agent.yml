@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - agent/macos-arm64-build-20260806
 
 permissions:
   contents: read
