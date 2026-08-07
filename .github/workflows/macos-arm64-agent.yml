@@ -58,6 +58,8 @@ jobs:
             APP_PATH="build/bin/darwin/arm64/Q-Solver.app"
           fi
           test -d "$APP_PATH"
+          PLIST="$APP_PATH/Contents/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$PLIST")" = "true"
           EXECUTABLE="$APP_PATH/Contents/MacOS/Q-Solver"
           file "$EXECUTABLE" | tee build/bin/architecture.txt
           file "$EXECUTABLE" | grep -q "arm64"
