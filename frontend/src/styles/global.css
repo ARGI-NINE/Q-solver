@@ -164,7 +164,7 @@ body {
 
 /* ---- Code blocks ---- */
 .md-body pre {
-  background: var(--code-bg);
+  background: transparent;
   border-radius: var(--radius-md);
   border: 1px solid var(--code-border);
   margin: var(--sp-4) 0;
@@ -188,7 +188,7 @@ body {
   margin: var(--sp-4) 0;
   border-radius: var(--radius-md);
   border: 1px solid var(--code-border);
-  background: var(--code-bg);
+  background: transparent;
   overflow: hidden;
   transition: border-color var(--duration-fast) ease;
 }
@@ -200,7 +200,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: var(--sp-2) var(--sp-4);
-  background: var(--code-header-bg);
+  background: transparent;
   border-bottom: 1px solid var(--code-border);
   user-select: none;
 }
