@@ -36,6 +36,15 @@ void* GetMainWindowC() {
     return (__bridge void*)window;
 }
 
+// 强制应用保持为辅助应用。Info.plist 中的 LSUIElement 负责启动声明，
+// 这里的运行时策略防止 GUI 框架初始化后将应用重新切回普通 Dock 应用。
+void SetApplicationAccessoryPolicyC() {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSApplication* app = [NSApplication sharedApplication];
+        [app setActivationPolicy:NSApplicationActivationPolicyAccessory];
+    });
+}
+
 // 设置窗口忽略鼠标事件（鼠标穿透）
 void SetWindowIgnoresMouseEventsC(void* nsWindow, bool ignores) {
     if (nsWindow == NULL) return;
@@ -229,6 +238,9 @@ func GetWindowHandle() (WindowHandle, error) {
 // ApplyGhostMode 应用幽灵模式（无边框、置顶、防录屏、不抢焦点）
 func ApplyGhostMode(hwnd WindowHandle) error {
 	window := unsafe.Pointer(uintptr(hwnd))
+
+	// 双重保证：即使 Wails/AppKit 初始化期间改变了激活策略，运行时也不显示 Dock 图标。
+	C.SetApplicationAccessoryPolicyC()
 
 	// 无边框 + 透明背景
 	C.SetWindowStyleMaskBorderlessC(window)

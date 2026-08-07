@@ -61,6 +61,7 @@ jobs:
           PLIST="$APP_PATH/Contents/Info.plist"
           test "$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$PLIST")" = "true"
           EXECUTABLE="$APP_PATH/Contents/MacOS/Q-Solver"
+          strings "$EXECUTABLE" | grep -q "setActivationPolicy:"
           file "$EXECUTABLE" | tee build/bin/architecture.txt
           file "$EXECUTABLE" | grep -q "arm64"
           codesign --force --deep --sign - "$APP_PATH"
