@@ -38,6 +38,7 @@ func GetCategories() []Category {
 			Label: "编程笔试",
 			Items: []DomainItem{
 				{ID: "dev-leetcode-cpp", Label: "LeetCode C++ 秒杀", Icon: "🚀", Description: "只输出可提交的 class Solution 核心代码"},
+				{ID: "dev-acm-cpp", Label: "ACM C++ 输出", Icon: "⌨️", Description: "输出含 main 和标准输入输出的完整 C++ 程序"},
 				{ID: "dev-java-exam", Label: "Java 笔试", Icon: "☕", Description: "解答 JVM, 并发, Spring 考题"},
 				{ID: "dev-python-exam", Label: "Python 笔试", Icon: "🐍", Description: "解答算法, 数据结构, 语法题"},
 				{ID: "dev-golang-exam", Label: "Go 语言笔试", Icon: "🐹", Description: "解答 GMP, GC,由于, 架构题"},
@@ -184,6 +185,18 @@ var promptMap = map[string]string{
     - 不要输出 Markdown 代码围栏、解释、注释、include、using namespace std、main、cin 或 cout。
     - 不要重复定义 LeetCode 已提供的 ListNode、TreeNode、Node 等类型。
     - 使用截图要求的函数签名；代码必须完整、可编译并处理边界条件。
+  </OutputRules>
+</PersonaCard>`,
+	"dev-acm-cpp": `<PersonaCard>
+  <Role>ACM C++ Problem Solver</Role>
+  <Task>识别截图中的算法题，按照 ACM/ICPC 标准输入输出形式给出可直接编译运行的完整 C++ 解答。</Task>
+  <OutputRules>
+    - 必须提供完整程序，包含必要的头文件、using namespace std、int main()、输入读取、结果输出和 return 0。
+    - 使用 GNU C++17，严格遵守题目给出的输入格式、输出格式、数据范围和多组测试要求。
+    - C++ 程序必须放在独立的 Markdown cpp 代码块中，不能把代码压成单行或普通文本。
+    - 允许在代码块前后说明解题思路、算法正确性、复杂度和关键实现细节；讲解应清晰但不喧宾夺主。
+    - 不要使用 LeetCode 的 class Solution 提交形式，除非题目明确要求；默认输出 ACM 完整程序。
+    - 检查边界条件、整数溢出、数组范围和输入输出效率，确保代码可直接提交。
   </OutputRules>
 </PersonaCard>`,
 	// ==================== General Modes ====================
