@@ -63,6 +63,45 @@ void SetWindowLevelC(void* nsWindow, int level) {
     });
 }
 
+// 配置跨应用全屏悬浮行为。macOS 13+ 使用 CanJoinAllApplications，
+// 这是 AppKit 专门提供给需要加入其他应用全屏环境的窗口行为。
+void ConfigureFullscreenOverlayC(NSWindow* window, bool bringToFront) {
+    if (window == nil) return;
+
+    NSWindowCollectionBehavior behavior = NSWindowCollectionBehaviorCanJoinAllSpaces;
+    if (@available(macOS 13.0, *)) {
+        behavior |= NSWindowCollectionBehaviorCanJoinAllApplications;
+    } else {
+        behavior |= NSWindowCollectionBehaviorFullScreenAuxiliary;
+    }
+
+    [window setCollectionBehavior:behavior];
+    [window setLevel:NSStatusWindowLevel];
+    if (bringToFront) {
+        [window orderFrontRegardless];
+    }
+}
+
+// Space 切换（包括进入浏览器原生全屏 Space）后重新应用窗口行为。
+// 保存 observer token，确保 block observer 在应用生命周期内持续有效。
+static id activeSpaceObserver = nil;
+void InstallFullscreenOverlayObserverC(void* nsWindow) {
+    if (nsWindow == NULL) return;
+    NSWindow* window = (__bridge NSWindow*)nsWindow;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        ConfigureFullscreenOverlayC(window, false);
+        if (activeSpaceObserver == nil) {
+            activeSpaceObserver = [[[NSWorkspace sharedWorkspace] notificationCenter]
+                addObserverForName:NSWorkspaceActiveSpaceDidChangeNotification
+                            object:nil
+                             queue:[NSOperationQueue mainQueue]
+                        usingBlock:^(NSNotification* notification) {
+                            ConfigureFullscreenOverlayC(window, true);
+                        }];
+        }
+    });
+}
+
 // 设置窗口样式（无边框 + 圆角）
 void SetWindowStyleMaskBorderlessC(void* nsWindow) {
     if (nsWindow == NULL) return;
@@ -102,13 +141,7 @@ void SetWindowNotActivatingC(void* nsWindow, bool noActivate) {
     NSWindow* window = (__bridge NSWindow*)nsWindow;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (noActivate) {
-            // 跨普通 Space，并允许作为辅助窗口显示在其他应用的原生全屏 Space。
-            // 不设置 Stationary/IgnoresCycle：Stationary 会导致窗口点击后无法
-            // 成为 key window，从而影响拖动和键盘输入。
-            NSWindowCollectionBehavior behavior =
-                NSWindowCollectionBehaviorCanJoinAllSpaces |
-                NSWindowCollectionBehaviorFullScreenAuxiliary;
-            [window setCollectionBehavior:behavior];
+            ConfigureFullscreenOverlayC(window, false);
         } else {
             [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
         }
@@ -120,6 +153,7 @@ void SetWindowCanBecomeKeyC(void* nsWindow) {
     if (nsWindow == NULL) return;
     NSWindow* window = (__bridge NSWindow*)nsWindow;
     dispatch_async(dispatch_get_main_queue(), ^{
+        ConfigureFullscreenOverlayC(window, true);
         [window makeKeyAndOrderFront:nil];
     });
 }
@@ -254,6 +288,9 @@ func ApplyGhostMode(hwnd WindowHandle) error {
 
 	// 置顶
 	C.SetWindowLevelC(window, C.int(WindowLevelFloating))
+
+	// 进入浏览器等其他应用的全屏 Space 后，持续保持跨应用悬浮。
+	C.InstallFullscreenOverlayObserverC(window)
 
 	// 防录屏 macOS 14+ 才可以
 	C.SetWindowSharingTypeC(window, C.int(nsWindowSharingNone))
