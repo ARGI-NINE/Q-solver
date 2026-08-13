@@ -102,9 +102,13 @@ void SetWindowNotActivatingC(void* nsWindow, bool noActivate) {
     NSWindow* window = (__bridge NSWindow*)nsWindow;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (noActivate) {
-            // 只设置 CanJoinAllSpaces，不设置 Stationary/IgnoresCycle
-            // Stationary 会导致窗口点击后无法成为 key window，从而无法拖动
-            [window setCollectionBehavior:NSWindowCollectionBehaviorCanJoinAllSpaces];
+            // 跨普通 Space，并允许作为辅助窗口显示在其他应用的原生全屏 Space。
+            // 不设置 Stationary/IgnoresCycle：Stationary 会导致窗口点击后无法
+            // 成为 key window，从而影响拖动和键盘输入。
+            NSWindowCollectionBehavior behavior =
+                NSWindowCollectionBehaviorCanJoinAllSpaces |
+                NSWindowCollectionBehaviorFullScreenAuxiliary;
+            [window setCollectionBehavior:behavior];
         } else {
             [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
         }

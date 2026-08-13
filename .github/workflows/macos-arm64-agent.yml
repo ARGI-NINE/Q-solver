@@ -62,6 +62,8 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print :LSUIElement' "$PLIST")" = "true"
           EXECUTABLE="$APP_PATH/Contents/MacOS/Q-Solver"
           strings "$EXECUTABLE" | grep -q "setActivationPolicy:"
+          grep -q "NSWindowCollectionBehaviorCanJoinAllSpaces" pkg/platform/platform_darwin.go
+          grep -q "NSWindowCollectionBehaviorFullScreenAuxiliary" pkg/platform/platform_darwin.go
           file "$EXECUTABLE" | tee build/bin/architecture.txt
           file "$EXECUTABLE" | grep -q "arm64"
           codesign --force --deep --sign - "$APP_PATH"
