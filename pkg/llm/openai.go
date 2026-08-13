@@ -85,10 +85,12 @@ func (a *OpenAIAdapter) toOpenAIParts(parts []ContentPart) []openai.ChatCompleti
 func (a *OpenAIAdapter) GenerateContentStream(ctx context.Context, messages []Message, onChunk StreamCallback) (Message, error) {
 	openaiMessages := a.toOpenAIMessages(messages)
 
-	stream := a.client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
+	params := openai.ChatCompletionNewParams{
 		Model:    a.config.Model,
 		Messages: openaiMessages,
-	})
+	}
+	a.applySpeedOptions(&params)
+	stream := a.client.Chat.Completions.NewStreaming(ctx, params)
 
 	defer stream.Close()
 
@@ -166,13 +168,15 @@ func (a *OpenAIAdapter) parseError(err error) error {
 }
 
 func (a *OpenAIAdapter) TestChat(ctx context.Context) error {
-	_, err := a.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+	params := openai.ChatCompletionNewParams{
 		Model: a.config.Model,
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.UserMessage("hi"),
 		},
 		MaxTokens: openai.Int(17),
-	})
+	}
+	a.applySpeedOptions(&params)
+	_, err := a.client.Chat.Completions.New(ctx, params)
 	if err != nil {
 		return a.parseError(err)
 	}
@@ -186,10 +190,12 @@ func (a *OpenAIAdapter) GenerateContent(ctx context.Context, model string, messa
 
 	openaiMessages := a.toOpenAIMessages(messages)
 
-	resp, err := a.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+	params := openai.ChatCompletionNewParams{
 		Model:    model,
 		Messages: openaiMessages,
-	})
+	}
+	a.applySpeedOptions(&params)
+	resp, err := a.client.Chat.Completions.New(ctx, params)
 
 	if err != nil {
 		return Message{}, a.parseError(err)
@@ -204,6 +210,19 @@ func (a *OpenAIAdapter) GenerateContent(ctx context.Context, model string, messa
 		Role:    RoleAssistant,
 		Content: content,
 	}, nil
+}
+
+func (a *OpenAIAdapter) applySpeedOptions(params *openai.ChatCompletionNewParams) {
+	extra := map[string]any{}
+	if effort := strings.TrimSpace(a.config.ReasoningEffort); effort != "" {
+		extra["reasoning_effort"] = effort
+	}
+	if a.config.PriorityProcessing {
+		extra["service_tier"] = "priority"
+	}
+	if len(extra) > 0 {
+		params.SetExtraFields(extra)
+	}
 }
 
 func (a *OpenAIAdapter) GetModels(ctx context.Context) ([]string, error) {

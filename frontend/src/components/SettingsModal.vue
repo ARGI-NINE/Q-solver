@@ -90,6 +90,22 @@
 
             <ModelSelect v-model="settingsStore.tempSettings.model" :models="ui.availableModels" :loading="ui.isLoadingModels" />
 
+			<div class="speed-settings">
+			  <label for="reasoning-effort">推理速度</label>
+			  <select id="reasoning-effort" v-model="settingsStore.tempSettings.reasoningEffort" class="form-select">
+				<option value="">跟随服务商（兼容性最好）</option>
+				<option value="none">极速（none）</option>
+				<option value="low">快速（low，推荐）</option>
+				<option value="medium">均衡（medium）</option>
+				<option value="high">深度（high）</option>
+			  </select>
+			  <label class="priority-toggle">
+				<input v-model="settingsStore.tempSettings.priorityProcessing" type="checkbox" />
+				<span>API 倍速处理（service_tier: priority）</span>
+			  </label>
+			  <p class="hint-text">第三方接口报参数错误时，关闭倍速并选择“跟随服务商”。</p>
+			</div>
+
             <div v-if="ui.connectionStatus" class="connection-status" :class="ui.connectionStatus.type">
               <span class="cs-icon">{{ ui.connectionStatus.icon }}</span>
               <span class="cs-text">{{ ui.connectionStatus.message }}</span>

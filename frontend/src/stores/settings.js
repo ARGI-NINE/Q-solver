@@ -23,6 +23,8 @@ export const useSettingsStore = defineStore('settings', () => {
     sharpening: 0,
     grayscale: true,
     noCompression: false,
+		reasoningEffort: 'low',
+		priorityProcessing: true,
   })
 
   const tempSettings = reactive({ ...settings })
@@ -44,14 +46,14 @@ export const useSettingsStore = defineStore('settings', () => {
     { action: 'screenshot', label: '截图', default: 'F8', macDefault: 'Cmd+1' },
     { action: 'send', label: '发送解题', default: 'Ctrl+J', macDefault: 'Cmd+J' },
     { action: 'delete', label: '删除截图', default: 'Ctrl+D', macDefault: 'Cmd+D' },
-    { action: 'toggle', label: '隐藏/显示', default: 'F9', macDefault: 'Cmd+2' },
+    { action: 'toggle', label: '隐藏/显示', default: 'F9', macDefault: 'Cmd+9' },
     { action: 'clickthrough', label: '鼠标穿透', default: 'F10', macDefault: 'Cmd+3' },
-    { action: 'move_up', label: '向上移动', default: 'Alt+Up', macDefault: 'Cmd+Option+Up' },
-    { action: 'move_down', label: '向下移动', default: 'Alt+Down', macDefault: 'Cmd+Option+Down' },
-    { action: 'move_left', label: '向左移动', default: 'Alt+Left', macDefault: 'Cmd+Option+Left' },
-    { action: 'move_right', label: '向右移动', default: 'Alt+Right', macDefault: 'Cmd+Option+Right' },
-    { action: 'scroll_up', label: '向上滚动', default: 'Alt+PgUp', macDefault: 'Cmd+Option+Shift+Up' },
-    { action: 'scroll_down', label: '向下滚动', default: 'Alt+PgDn', macDefault: 'Cmd+Option+Shift+Down' },
+    { action: 'move_up', label: '向上移动', default: 'Alt+Up', macDefault: 'Cmd+Option+W' },
+    { action: 'move_down', label: '向下移动', default: 'Alt+Down', macDefault: 'Cmd+Option+S' },
+    { action: 'move_left', label: '向左移动', default: 'Alt+Left', macDefault: 'Cmd+Option+A' },
+    { action: 'move_right', label: '向右移动', default: 'Alt+Right', macDefault: 'Cmd+Option+D' },
+    { action: 'scroll_up', label: '向上滚动', default: 'Alt+PgUp', macDefault: 'Cmd+Option+Up' },
+    { action: 'scroll_down', label: '向下滚动', default: 'Alt+PgDn', macDefault: 'Cmd+Option+Down' },
   ]
 
   const maskedKey = computed(() => {
@@ -179,6 +181,8 @@ export const useSettingsStore = defineStore('settings', () => {
     settings.resumePath = config.resumePath || ''
     settings.resumeContent = config.resumeContent || ''
     settings.screenshotMode = config.screenshotMode || 'window'
+		settings.reasoningEffort = config.reasoningEffort ?? 'low'
+		settings.priorityProcessing = config.priorityProcessing !== undefined ? config.priorityProcessing : true
 
     const opacity = config.opacity !== undefined ? config.opacity : 1.0
     settings.transparency = 1.0 - opacity
@@ -269,6 +273,8 @@ export const useSettingsStore = defineStore('settings', () => {
       sharpening: sourceSettings.sharpening,
       grayscale: sourceSettings.grayscale,
       noCompression: sourceSettings.noCompression,
+		reasoningEffort: sourceSettings.reasoningEffort,
+		priorityProcessing: sourceSettings.priorityProcessing,
       resumePath: sourceSettings.resumePath,
       resumeContent: sourceSettings.resumeContent,
       shortcuts: sourceShortcuts,

@@ -43,9 +43,18 @@ export const useSolutionStore = defineStore('solution', () => {
 
   // ---- Helpers ----
 
+  function formatSolutionForMarkdown(content) {
+    if (!content) return ''
+    const trimmed = content.trim()
+    if (trimmed.startsWith('class Solution') && !trimmed.includes('```')) {
+      return `\`\`\`cpp\n${trimmed}\n\`\`\``
+    }
+    return content
+  }
+
   function renderMarkdown(md) {
     if (!md) return ''
-    return renderMarkdownWithLatex(md)
+    return renderMarkdownWithLatex(formatSolutionForMarkdown(md))
   }
 
   function getSummary(item) {
@@ -169,7 +178,7 @@ export const useSolutionStore = defineStore('solution', () => {
       renderRafId = requestAnimationFrame(() => {
         renderDirty = false
         renderRafId = null
-        streamingHtml.value = renderMarkdownWithLatex(streamBuffer)
+        streamingHtml.value = renderMarkdownWithLatex(formatSolutionForMarkdown(streamBuffer))
         scrollContentToBottom()
       })
     }
@@ -219,7 +228,8 @@ export const useSolutionStore = defineStore('solution', () => {
     streamingHtml.value = ''
     if (history.value.length > 0) {
       const round = getCurrentRound(history.value[0])
-      if (round && !round.aiResponse) round.aiResponse = data
+      // Always replace the streamed draft with the backend's validated final result.
+      if (round) round.aiResponse = data
     }
   }
 

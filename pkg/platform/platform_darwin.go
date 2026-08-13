@@ -36,6 +36,15 @@ void* GetMainWindowC() {
     return (__bridge void*)window;
 }
 
+// 强制应用保持为辅助应用。Info.plist 中的 LSUIElement 负责启动声明，
+// 这里的运行时策略防止 GUI 框架初始化后将应用重新切回普通 Dock 应用。
+void SetApplicationAccessoryPolicyC() {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSApplication* app = [NSApplication sharedApplication];
+        [app setActivationPolicy:NSApplicationActivationPolicyAccessory];
+    });
+}
+
 // 设置窗口忽略鼠标事件（鼠标穿透）
 void SetWindowIgnoresMouseEventsC(void* nsWindow, bool ignores) {
     if (nsWindow == NULL) return;
@@ -51,6 +60,45 @@ void SetWindowLevelC(void* nsWindow, int level) {
     NSWindow* window = (__bridge NSWindow*)nsWindow;
     dispatch_async(dispatch_get_main_queue(), ^{
         [window setLevel:level];
+    });
+}
+
+// 配置跨应用全屏悬浮行为。macOS 13+ 使用 CanJoinAllApplications，
+// 这是 AppKit 专门提供给需要加入其他应用全屏环境的窗口行为。
+void ConfigureFullscreenOverlayC(NSWindow* window, bool bringToFront) {
+    if (window == nil) return;
+
+    NSWindowCollectionBehavior behavior = NSWindowCollectionBehaviorCanJoinAllSpaces;
+    if (@available(macOS 13.0, *)) {
+        behavior |= NSWindowCollectionBehaviorCanJoinAllApplications;
+    } else {
+        behavior |= NSWindowCollectionBehaviorFullScreenAuxiliary;
+    }
+
+    [window setCollectionBehavior:behavior];
+    [window setLevel:NSStatusWindowLevel];
+    if (bringToFront) {
+        [window orderFrontRegardless];
+    }
+}
+
+// Space 切换（包括进入浏览器原生全屏 Space）后重新应用窗口行为。
+// 保存 observer token，确保 block observer 在应用生命周期内持续有效。
+static id activeSpaceObserver = nil;
+void InstallFullscreenOverlayObserverC(void* nsWindow) {
+    if (nsWindow == NULL) return;
+    NSWindow* window = (__bridge NSWindow*)nsWindow;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        ConfigureFullscreenOverlayC(window, false);
+        if (activeSpaceObserver == nil) {
+            activeSpaceObserver = [[[NSWorkspace sharedWorkspace] notificationCenter]
+                addObserverForName:NSWorkspaceActiveSpaceDidChangeNotification
+                            object:nil
+                             queue:[NSOperationQueue mainQueue]
+                        usingBlock:^(NSNotification* notification) {
+                            ConfigureFullscreenOverlayC(window, true);
+                        }];
+        }
     });
 }
 
@@ -93,9 +141,7 @@ void SetWindowNotActivatingC(void* nsWindow, bool noActivate) {
     NSWindow* window = (__bridge NSWindow*)nsWindow;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (noActivate) {
-            // 只设置 CanJoinAllSpaces，不设置 Stationary/IgnoresCycle
-            // Stationary 会导致窗口点击后无法成为 key window，从而无法拖动
-            [window setCollectionBehavior:NSWindowCollectionBehaviorCanJoinAllSpaces];
+            ConfigureFullscreenOverlayC(window, false);
         } else {
             [window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
         }
@@ -107,6 +153,7 @@ void SetWindowCanBecomeKeyC(void* nsWindow) {
     if (nsWindow == NULL) return;
     NSWindow* window = (__bridge NSWindow*)nsWindow;
     dispatch_async(dispatch_get_main_queue(), ^{
+        ConfigureFullscreenOverlayC(window, true);
         [window makeKeyAndOrderFront:nil];
     });
 }
@@ -230,6 +277,9 @@ func GetWindowHandle() (WindowHandle, error) {
 func ApplyGhostMode(hwnd WindowHandle) error {
 	window := unsafe.Pointer(uintptr(hwnd))
 
+	// 双重保证：即使 Wails/AppKit 初始化期间改变了激活策略，运行时也不显示 Dock 图标。
+	C.SetApplicationAccessoryPolicyC()
+
 	// 无边框 + 透明背景
 	C.SetWindowStyleMaskBorderlessC(window)
 
@@ -238,6 +288,9 @@ func ApplyGhostMode(hwnd WindowHandle) error {
 
 	// 置顶
 	C.SetWindowLevelC(window, C.int(WindowLevelFloating))
+
+	// 进入浏览器等其他应用的全屏 Space 后，持续保持跨应用悬浮。
+	C.InstallFullscreenOverlayObserverC(window)
 
 	// 防录屏 macOS 14+ 才可以
 	C.SetWindowSharingTypeC(window, C.int(nsWindowSharingNone))
